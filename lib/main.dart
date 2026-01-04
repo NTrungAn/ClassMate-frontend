@@ -66,7 +66,7 @@ class MyApp extends StatelessWidget {
           labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
           indicatorColor: Colors.blue.shade50,
           height: 60,
-          iconTheme: MaterialStateProperty.all(const IconThemeData(size: 22)),
+          iconTheme: WidgetStateProperty.all(const IconThemeData(size: 22)),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
