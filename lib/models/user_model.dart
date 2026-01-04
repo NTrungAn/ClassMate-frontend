@@ -1,54 +1,53 @@
-class UserResponse {
-  final String? token;
-  final String? userName;
-  final String? fullName;
-  final String? avatarUrl;
-  final String? role;
+import '../core/constants/strings.dart';
 
-  UserResponse({
-    this.token,
-    this.userName,
-    this.fullName,
+class UserModel {
+  final String id;
+  final String token;
+  final String userName;
+  final String fullName;
+  final String role;
+  final String? avatarUrl;
+  final String expiration;
+  final String email;
+  final DateTime createdAt;
+
+  UserModel({
+    required this.id,
+    required this.token,
+    required this.userName,
+    required this.fullName,
+    required this.role,
     this.avatarUrl,
-    this.role,
+    required this.expiration,
+    required this.email,
+    required this.createdAt,
   });
 
-  factory UserResponse.fromJson(
-    Map<String, dynamic> json, {
-    String? tokenFromStorage,
-  }) {
-    // parse basic fields
-    final String? userName = json['userName']?.toString();
-    final String? fullName = json['fullName']?.toString();
-    final String? avatarUrl = json['avatarUrl']?.toString();
-
-    // normalize role from different possible shapes
-    String? role;
-    if (json['role'] != null) {
-      role = json['role'].toString();
-    } else if (json['roles'] != null) {
-      final r = json['roles'];
-      if (r is String) {
-        role = r;
-      } else if (r is Iterable && r.isNotEmpty) {
-        final first = r.first;
-        if (first is String) {
-          role = first;
-        } else if (first is Map) {
-          role = (first['normalizedName'] ?? first['name'] ?? first['role'])
-              ?.toString();
-        }
-      }
-    } else if (json['normalizedRole'] != null) {
-      role = json['normalizedRole'].toString();
-    }
-
-    return UserResponse(
-      token: tokenFromStorage ?? json['token']?.toString(),
-      userName: userName,
-      fullName: fullName,
-      avatarUrl: avatarUrl,
-      role: role,
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(
+      token: json['token'] ?? '',
+      expiration: json['expiration'] ?? DateTime.now().toIso8601String(),
+      userName: json['userName'] ?? '',
+      fullName: json['fullName'] ?? '',
+      role: json['role'] ?? AppStrings.roleStudent,
+      avatarUrl: json['avatarUrl'],
+      email: json['email'] ?? '',
+      id: json['id'] ?? '',
+      createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'token': token,
+      'userName': userName,
+      'fullName': fullName,
+      'role': role,
+      'avatarUrl': avatarUrl,
+      'expiration': expiration,
+      'email': email,
+      'createdAt': createdAt.toIso8601String(),
+    };
   }
 }

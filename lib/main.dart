@@ -1,26 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hive_flutter/hive_flutter.dart'; // 1. Import Hive
+import 'package:hive_flutter/hive_flutter.dart';
 
-import 'views/login_screen.dart';
-import 'controllers/auth_controller.dart';
+// ================= CORE =================
+import 'package:frontend/core/constants/colors.dart';
+import 'package:frontend/core/services/storage_service.dart';
+import 'package:frontend/core/services/api_service.dart';
+import 'package:frontend/core/services/auth_service.dart';
+import 'package:frontend/core/services/class_service.dart';
+import 'package:frontend/core/services/attendance_service.dart';
+import 'package:frontend/core/services/location_service.dart';
 
-void main() async {
+// ================= PROVIDERS =================
+import 'package:frontend/providers/auth_provider.dart';
+
+// ================= SCREENS =================
+import 'package:frontend/screens/login_screen.dart';
+import 'package:frontend/screens/main_screen.dart';
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // --- 2. KHỞI TẠO HIVE (Thay cho GetStorage) ---
+  // ================== INIT HIVE ==================
   await Hive.initFlutter();
-  await Hive.openBox('myBox'); // Mở một cái hộp tên là 'myBox' để lưu token
+  await Hive.openBox('authBox');
 
-  // --- 3. KHỞI TẠO CONTROLLER (Chống Crash) ---
-  Get.put(AuthController(), permanent: true);
-  // Get.put(
-  //   CoursesController(),
-  //   permanent: true,
-  // ); // <--- ADD: đảm bảo CoursesController có sẵn
+  // ================== INIT SERVICES (BẮT BUỘC) ==================
+  await Get.putAsync<StorageService>(() async {
+    return await StorageService().init();
+  });
+
+  Get.put<ApiService>(ApiService());
+  Get.put<AuthService>(AuthService());
+  Get.put<ClassService>(ClassService());
+  Get.put<AttendanceService>(AttendanceService());
+  Get.put<LocationService>(LocationService());
+
+  // ================== INIT PROVIDER ==================
+  Get.put<AuthProvider>(AuthProvider());
 
   runApp(const MyApp());
 }
+
+// =======================================================
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -28,62 +50,96 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      title: 'Classmate QR',
       debugShowCheckedModeBanner: false,
-      title: '',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: const Color(0xFFF5F7FB),
-        colorScheme: ColorScheme.fromSwatch(
-          primarySwatch: Colors.blue,
-        ).copyWith(secondary: Colors.blueAccent),
-        textTheme: TextTheme(
-          titleLarge: TextStyle(
-            fontSize: 20.0,
-            fontWeight: FontWeight.w700,
-            color: Colors.black87,
-          ),
-          titleMedium: TextStyle(
-            fontSize: 16.0,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-          bodyMedium: TextStyle(fontSize: 14.0, color: Colors.black87),
-          labelLarge: TextStyle(fontSize: 15.0, fontWeight: FontWeight.w600),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primaryColor,
+          brightness: Brightness.light,
         ),
-        appBarTheme: AppBarTheme(
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
           elevation: 0,
-          backgroundColor: Colors.white,
-          iconTheme: const IconThemeData(color: Colors.blueAccent),
+          iconTheme: IconThemeData(color: AppColors.primaryColor),
           titleTextStyle: TextStyle(
-            color: Colors.black87,
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
+            color: AppColors.primaryColor,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        navigationBarTheme: NavigationBarThemeData(
-          backgroundColor: Colors.white,
-          elevation: 8,
-          labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-          indicatorColor: Colors.blue.shade50,
-          height: 60,
-          iconTheme: WidgetStateProperty.all(const IconThemeData(size: 22)),
+        inputDecorationTheme: InputDecorationTheme(
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.borderColor),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.borderColor),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.primaryColor),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
+            backgroundColor: AppColors.primaryColor,
             foregroundColor: Colors.white,
-            textStyle: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-            ),
+            minimumSize: const Size(double.infinity, 50),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            minimumSize: const Size.fromHeight(48),
+            textStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: Colors.white,
+          selectedItemColor: AppColors.primaryColor,
+          unselectedItemColor: AppColors.textLight,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+          type: BottomNavigationBarType.fixed,
+        ),
       ),
-      home: LoginScreen(),
+      home: const AuthWrapper(),
     );
+  }
+}
+
+// =======================================================
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // ❗ CHỈ DÙNG find – KHÔNG put
+    final authProvider = Get.find<AuthProvider>();
+
+    return Obx(() {
+      if (authProvider.isLoading.value) {
+        return const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(
+              color: AppColors.primaryColor,
+            ),
+          ),
+        );
+      }
+
+      return authProvider.isLoggedIn.value
+          ? const MainScreen()
+          : const LoginScreen();
+    });
   }
 }
