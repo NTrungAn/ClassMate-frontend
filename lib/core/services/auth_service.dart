@@ -5,7 +5,7 @@ import 'package:frontend/core/constants/api_constants.dart';
 import 'package:frontend/core/services/api_service.dart';
 import 'package:frontend/core/services/storage_service.dart';
 import 'package:frontend/models/user_model.dart';
-
+   
 class AuthService extends GetxService {
   static AuthService get instance => Get.find<AuthService>();
 
