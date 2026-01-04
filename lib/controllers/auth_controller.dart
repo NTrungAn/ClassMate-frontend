@@ -200,9 +200,9 @@ class AuthController extends GetxController {
               final decoded = utf8.decode(base64Url.decode(payload));
               final Map<String, dynamic> claims = jsonDecode(decoded);
 
-              if (claims['role'] != null)
+              if (claims['role'] != null) {
                 parsedRole = claims['role'].toString();
-              else if (claims['roles'] != null)
+              } else if (claims['roles'] != null)
                 parsedRole = claims['roles'].toString();
               else if (claims['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] !=
                   null)

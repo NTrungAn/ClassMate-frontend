@@ -56,12 +56,14 @@ class DashboardScreen extends StatelessWidget {
     if (rawRole.contains('admin')) return 'admin';
     if (rawRole.contains('teach') ||
         rawRole.contains('giang') ||
-        rawRole.contains('lecturer'))
+        rawRole.contains('lecturer')) {
       return 'teacher';
+    }
     if (rawRole.contains('student') ||
         rawRole.contains('sv') ||
-        rawRole.contains('user'))
+        rawRole.contains('user')) {
       return 'student';
+    }
 
     // fallback an toàn
     return 'student';
